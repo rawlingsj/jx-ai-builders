@@ -53,7 +53,7 @@ RUN curl -f -L -o /tmp/yarn.tgz https://github.com/yarnpkg/yarn/releases/downloa
 
 # Chromium, chromedriver, Xvfb
 RUN yum install -y bzip2 GConf2 gtk2 chromedriver chromium xorg-x11-server-Xvfb
-RUN npm i -g watch-cli vsce typescript aws-cdk
+RUN npm i -g vsce typescript aws-cdk
 
 # Google Chrome
 RUN yum install -y google-chrome-stable \

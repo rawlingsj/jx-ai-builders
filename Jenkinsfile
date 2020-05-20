@@ -30,12 +30,12 @@ String getReleaseVersion() {
 }
 
 String getVersion() {
-    return BRANCH_NAME == 'master' ? 'latest' : getReleaseVersion() + BRANCH_NAME
+    return BRANCH_NAME == 'master' ? getReleaseVersion() : getReleaseVersion() + "-$BRANCH_NAME"
 }
 
 void skaffoldBuild(String buildImage) {
     withEnv(["VERSION=${getVersion()}"]) {
-        echo "Build image ${buildImage} version ${VERSION}"
+        echo "Build ${DOCKER_REGISTRY}/${ORG}/${buildImage}:${VERSION}"
         sh """
 export SCM_REF=\$(git show -s --pretty=format:'%h%d' 2>/dev/null ||echo unknown)
 envsubst < skaffold.yaml > skaffold.yaml~gen
@@ -45,16 +45,23 @@ skaffold build -f skaffold.yaml~gen -b $buildImage
 }
 
 def skaffoldBuildStage(String buildImage) {
-    stage("$buildImage") {
-        try {
-            setGitHubBuildStatus("build/$buildImage", "Build $buildImage image", 'PENDING')
+    return {
+        stage("$buildImage") {
             container('jx-base') {
-                skaffoldBuild("$buildImage")
+                def currentNamespace = sh(returnStdout: true, script: "jx -b ns | cut -d\\' -f2").trim()
+                if (currentNamespace == 'ai') {
+                    try {
+                        setGitHubBuildStatus("build/$buildImage", "Build $buildImage image", 'PENDING')
+                        skaffoldBuild("$buildImage")
+                        setGitHubBuildStatus("build/$buildImage", "Build $buildImage image", 'SUCCESS')
+                    } catch (Throwable cause) {
+                        setGitHubBuildStatus("build/$buildImage", "Build $buildImage image", 'FAILURE')
+                        throw cause
+                    }
+                } else {
+                    skaffoldBuild("$buildImage")
+                }
             }
-            setGitHubBuildStatus("build/$buildImage", "Build $buildImage image", 'SUCCESS')
-        } catch (Throwable cause) {
-            setGitHubBuildStatus("build/$buildImage", "Build $buildImage image", 'FAILURE')
-            throw cause
         }
     }
 }
@@ -71,6 +78,7 @@ pipeline {
     }
     environment {
         ORG = 'nuxeo'
+        INTERNAL_DOCKER_REGISTRY = 'docker-registry.ai.dev.nuxeo.com'
     }
     stages {
         stage('Init') {
@@ -84,30 +92,30 @@ git fetch --tags --quiet
                 }
             }
         }
-        stage('Build all builders') {
+        stage('Build') {
             steps {
                 script {
-                    skaffoldBuildStage("builder-base")
+                    skaffoldBuildStage("builder-base").call()
                     stage('Custom Builders') {
-                        parallel {
-                            skaffoldBuildStage('builder-base')
-                            skaffoldBuildStage('builder-java8')
-                            skaffoldBuildStage('builder-java11')
-                            skaffoldBuildStage('builder-nodejs')
-                            skaffoldBuildStage('builder-nuxeo1010')
-                        }
+                        def builders = ['builder-java8',
+                                        'builder-java11',
+                                        'builder-nodejs',
+                                        'builder-nuxeo1010']
+                        parallel(builders.collectEntries {
+                            [("${it}".toString()): skaffoldBuildStage(it)]
+                        })
                     }
                 }
             }
         }
         stage('Release') {
             when {
-                branch 'NOmaster'
+                branch 'master'
             }
             steps {
                 container('jx-base') {
                     script {
-                        def currentNamespace = sh(returnStdout: true, script: "jx --batch-mode ns | cut -d\\' -f2").trim()
+                        def currentNamespace = sh(returnStdout: true, script: "jx -b ns | cut -d\\' -f2").trim()
                         if (currentNamespace == 'ai-staging') {
                             echo "Running in namespace ${currentNamespace}, skip GitHub release stage."
                             return

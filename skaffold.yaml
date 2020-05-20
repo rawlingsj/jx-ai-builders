@@ -23,12 +23,12 @@ build:
       kaniko:
         dockerfile: Dockerfile
         buildArgs:
-          VERSION: $(VERSION)
-          SCM_REF: $(SCM_REF)
+          VERSION: ${VERSION}
+          SCM_REF: ${SCM_REF}
         buildContext:
           localDir: {}
         cache:
-          repo: $(DOCKER_REGISTRY)/$(ORG)/cache
+          repo: ${DOCKER_REGISTRY}/${ORG}/cache
     - image: builder-java8
       context: builder-java
       kaniko:
@@ -39,7 +39,7 @@ build:
         buildContext:
           localDir: {}
         cache:
-          repo: $(DOCKER_REGISTRY)/$(ORG)/cache
+          repo: ${DOCKER_REGISTRY}/${ORG}/cache
     - image: builder-java11
       context: builder-java
       kaniko:
@@ -50,7 +50,7 @@ build:
         buildContext:
           localDir: {}
         cache:
-          repo: $(DOCKER_REGISTRY)/$(ORG)/cache
+          repo: ${DOCKER_REGISTRY}/${ORG}/cache
     - image: builder-nodejs
       context: builder-nodejs
       kaniko:
@@ -60,7 +60,7 @@ build:
         buildContext:
           localDir: {}
         cache:
-          repo: $(DOCKER_REGISTRY)/$(ORG)/cache
+          repo: ${DOCKER_REGISTRY}/${ORG}/cache
     - image: builder-nuxeo1010
       context: builder-nuxeo1010
       kaniko:
@@ -70,7 +70,7 @@ build:
         buildContext:
           localDir: {}
         cache:
-          repo: $(DOCKER_REGISTRY)/$(ORG)/cache
+          repo: ${DOCKER_REGISTRY}/${ORG}/cache
   cluster:
     namespace: ai
     pullSecretName: kaniko-secret
