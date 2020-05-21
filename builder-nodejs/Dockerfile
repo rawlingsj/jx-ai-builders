@@ -15,7 +15,7 @@
 ARG BASE_IMAGE
 FROM ${BASE_IMAGE}
 
-ARG DESCRIPTION="NodeJS and Chrome image for the NOS elements build"
+ARG DESCRIPTION="NodeJS builder for AI team"
 LABEL description=${DESCRIPTION}
 
 #USER root
@@ -23,11 +23,10 @@ LABEL description=${DESCRIPTION}
 # NodeJS
 ARG NODEJS_VERSION=10
 RUN curl -f --silent --location https://rpm.nodesource.com/setup_${NODEJS_VERSION}.x | bash - && \
-  yum install -y nodejs gcc-c++ make \
+  yum install -y nodejs gcc-c++ \
   && yum clean all
 
-# Chrome
-RUN yum install -y google-chrome-stable \
-  && yum clean all
+#ARG JENKINS_USER=jenkins
+#USER ${JENKINS_USER}
 
-CMD ["google-chrome","-version"]
+CMD ["nodejs","--version"]

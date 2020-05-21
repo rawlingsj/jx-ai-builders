@@ -71,8 +71,31 @@ build:
           localDir: {}
         cache:
           repo: ${DOCKER_REGISTRY}/${ORG}/cache
+    - image: builder-python36
+      context: builder-python36
+      kaniko:
+        dockerfile: Dockerfile
+        buildArgs:
+          BASE_IMAGE: ${DOCKER_REGISTRY}/${ORG}/builder-base:${VERSION}
+        buildContext:
+          localDir: {}
+        cache:
+          repo: ${DOCKER_REGISTRY}/${ORG}/cache
+    - image: builder-python37
+      context: builder-python37
+      kaniko:
+        dockerfile: Dockerfile
+        buildArgs:
+          BASE_IMAGE: ${DOCKER_REGISTRY}/${ORG}/builder-base:${VERSION}
+        buildContext:
+          localDir: {}
+        cache:
+          repo: ${DOCKER_REGISTRY}/${ORG}/cache
   cluster:
     namespace: ai
     pullSecretName: kaniko-secret
     dockerConfig:
       secretName: jenkins-docker-cfg
+test:
+  - image: builder-python36
+  - image: builder-python37

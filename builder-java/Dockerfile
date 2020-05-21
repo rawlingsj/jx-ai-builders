@@ -15,7 +15,7 @@
 ARG BASE_IMAGE
 FROM ${BASE_IMAGE}
 
-ARG DESCRIPTION="Java builder image for AI team"
+ARG DESCRIPTION="Java builder for AI team"
 LABEL description=${DESCRIPTION}
 
 #USER root
@@ -41,6 +41,4 @@ ENV maven.home ${M2_HOME}
 ENV M2 ${M2_HOME}/bin
 ENV PATH ${M2}:${PATH}
 
-RUN echo ${DESCRIPTION}:${SCM_URL}:${SCM_REF}:${VERSION} > /home/jenkins/.ai-builder-java8
-
-CMD ["tail", "-f", "/dev/null"]
+CMD ["mvn", "--version"]

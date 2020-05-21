@@ -24,6 +24,7 @@ jenkins-x-platform v2.0.1849 with jenkins-x-builders v2.0.1117-453
 - https://github.com/jenkins-x/jenkins-x-builders
 - https://github.com/jenkins-x/jenkins-x-platform
 - https://github.com/jenkins-x/jenkins-x-builders-base
+- https://github.com/jenkins-x/jenkins-x-builders-base-image
 
 ## Image Builds
 
