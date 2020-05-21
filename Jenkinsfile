@@ -33,12 +33,21 @@ String getVersion() {
     return BRANCH_NAME == 'master' ? getReleaseVersion() : getReleaseVersion() + "-$BRANCH_NAME"
 }
 
+void skaffoldGen() {
+    withEnv(["VERSION=${getVersion()}"]) {
+        sh '''
+export SCM_REF=$(git show -s --pretty=format:'%h%d' 2>/dev/null ||echo unknown)
+envsubst < skaffold.yaml > skaffold.yaml~gen
+# dry-run requires newer skaffold (1.9.0)
+#skaffold build -f skaffold.yaml~gen -q --dry-run
+'''
+    }
+}
+
 void skaffoldBuild(String buildImage) {
     withEnv(["VERSION=${getVersion()}"]) {
         echo "Build ${DOCKER_REGISTRY}/${ORG}/${buildImage}:${VERSION}"
         sh """
-export SCM_REF=\$(git show -s --pretty=format:'%h%d' 2>/dev/null ||echo unknown)
-envsubst < skaffold.yaml > skaffold.yaml~gen
 skaffold build -f skaffold.yaml~gen -b $buildImage
 """
     }
@@ -89,6 +98,7 @@ jx step git credentials
 git config credential.helper store
 git fetch --tags --quiet
 '''
+                    skaffoldGen()
                 }
             }
         }
