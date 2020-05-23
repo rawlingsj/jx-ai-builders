@@ -1,6 +1,6 @@
 schemaVersion: '2.0.0'
 commandTests:
-- name: 'python3'
+- name: 'python37'
   command: 'python3'
   args: ['--version']
   excludedError: ['.*FAIL.*']

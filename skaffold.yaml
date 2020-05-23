@@ -97,5 +97,10 @@ build:
     dockerConfig:
       secretName: jenkins-docker-cfg
 test:
-  - image: builder-python36
-  - image: builder-python37
+# Requires Skaffold 1.9+
+#  - image: builder-python36
+#    structureTests:
+#      - './builder-python36/test/*'
+#  - image: builder-python37
+#    structureTests:
+#      - './builder-python37/test/*'
