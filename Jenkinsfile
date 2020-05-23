@@ -18,6 +18,9 @@
  */
 
 void setGitHubBuildStatus(String context, String message, String state) {
+    if (NAMESPACE == 'ai-staging') { // No GitHub status from ai-staging
+        return
+    }
     step([$class            : 'GitHubCommitStatusSetter',
           reposSource       : [$class: 'ManuallyEnteredRepositorySource', url: 'https://github.com/nuxeo/jx-ai-builders'],
           contextSource     : [$class: 'ManuallyEnteredCommitContextSource', context: context],
@@ -58,25 +61,19 @@ skaffold build -f skaffold.yaml~gen
 def skaffoldBuildStage(String buildImage) {
     return {
         stage("$buildImage") {
-            container('jx-base') {
-                def currentNamespace = sh(returnStdout: true, script: "jx -b ns | cut -d\\' -f2").trim()
-                if (currentNamespace == 'ai') {
-                    try {
-                        setGitHubBuildStatus("build/$buildImage", "Build $buildImage image", 'PENDING')
-                        skaffoldBuild("$buildImage")
-                        setGitHubBuildStatus("build/$buildImage", "Build $buildImage image", 'SUCCESS')
-                    } catch (Throwable cause) {
-                        setGitHubBuildStatus("build/$buildImage", "Build $buildImage image", 'FAILURE')
-                        throw cause
-                    }
-                } else {
+            try {
+                setGitHubBuildStatus("build/$buildImage", "Build $buildImage image", 'PENDING')
+                container('jx-base') {
                     skaffoldBuild("$buildImage")
                 }
+                setGitHubBuildStatus("build/$buildImage", "Build $buildImage image", 'SUCCESS')
+            } catch (Throwable cause) {
+                setGitHubBuildStatus("build/$buildImage", "Build $buildImage image", 'FAILURE')
+                throw cause
             }
         }
     }
 }
-
 
 pipeline {
     agent {
@@ -90,6 +87,7 @@ pipeline {
     environment {
         ORG = 'nuxeo'
         INTERNAL_DOCKER_REGISTRY = 'docker-registry.ai.dev.nuxeo.com'
+        NAMESPACE = ''
     }
     stages {
         stage('Init') {
@@ -100,6 +98,9 @@ jx step git credentials
 git config credential.helper store
 git fetch --tags --quiet
 '''
+                    script {
+                        NAMESPACE = sh(script: "jx -b ns | cut -d\\' -f2", returnStdout: true).trim()
+                    }
                     skaffoldGen()
                 }
             }
@@ -123,15 +124,11 @@ git fetch --tags --quiet
         stage('Release') {
             when {
                 branch 'master'
+                expression { NAMESPACE == 'ai' }
             }
             steps {
                 container('jx-base') {
                     script {
-                        def currentNamespace = sh(returnStdout: true, script: "jx -b ns | cut -d\\' -f2").trim()
-                        if (currentNamespace == 'ai-staging') {
-                            echo "Running in namespace ${currentNamespace}, skip GitHub release stage."
-                            return
-                        }
                         setGitHubBuildStatus('release', 'Release', 'PENDING')
                         withEnv(["VERSION=${getReleaseVersion()}"]) {
                             echo "Releasing version ${VERSION}"
