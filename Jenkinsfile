@@ -52,8 +52,7 @@ void skaffoldBuild(String buildImage) {
     withEnv(["VERSION=${getVersion()}"]) {
         echo "Build ${DOCKER_REGISTRY}/${ORG}/${buildImage}:${VERSION}"
         sh """
-skaffold build -f skaffold.yaml~gen
-# -b $buildImage
+skaffold build -f skaffold.yaml~gen -b $buildImage
 """
     }
 }
@@ -109,15 +108,15 @@ git fetch --tags --quiet
             steps {
                 script {
                     skaffoldBuildStage("builder-base").call()
-//                    stage('Custom Builders') {
-//                        def builders = ['builder-java8', 'builder-java11',
-//                                        'builder-nodejs',
-//                                        'builder-nuxeo1010',
-//                                        'builder-python36', 'builder-python37']
-//                        parallel(builders.collectEntries {
-//                            [("${it}".toString()): skaffoldBuildStage(it)]
-//                        })
-//                    }
+                    stage('Custom Builders') {
+                        def builders = ['builder-java8', 'builder-java11',
+                                        'builder-nodejs',
+                                        'builder-nuxeo1010',
+                                        'builder-python36', 'builder-python37']
+                        parallel(builders.collectEntries {
+                            [("${it}".toString()): skaffoldBuildStage(it)]
+                        })
+                    }
                 }
             }
         }
