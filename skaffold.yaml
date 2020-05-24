@@ -23,12 +23,12 @@ build:
       kaniko:
         dockerfile: Dockerfile
         buildArgs:
-          VERSION: $(VERSION)
-          SCM_REF: $(SCM_REF)
+          VERSION: ${VERSION}
+          SCM_REF: ${SCM_REF}
         buildContext:
           localDir: {}
         cache:
-          repo: $(DOCKER_REGISTRY)/$(ORG)/cache
+          repo: ${DOCKER_REGISTRY}/${ORG}/cache
     - image: builder-java8
       context: builder-java
       kaniko:
@@ -39,7 +39,7 @@ build:
         buildContext:
           localDir: {}
         cache:
-          repo: $(DOCKER_REGISTRY)/$(ORG)/cache
+          repo: ${DOCKER_REGISTRY}/${ORG}/cache
     - image: builder-java11
       context: builder-java
       kaniko:
@@ -50,7 +50,7 @@ build:
         buildContext:
           localDir: {}
         cache:
-          repo: $(DOCKER_REGISTRY)/$(ORG)/cache
+          repo: ${DOCKER_REGISTRY}/${ORG}/cache
     - image: builder-nodejs
       context: builder-nodejs
       kaniko:
@@ -60,7 +60,7 @@ build:
         buildContext:
           localDir: {}
         cache:
-          repo: $(DOCKER_REGISTRY)/$(ORG)/cache
+          repo: ${DOCKER_REGISTRY}/${ORG}/cache
     - image: builder-nuxeo1010
       context: builder-nuxeo1010
       kaniko:
@@ -70,9 +70,37 @@ build:
         buildContext:
           localDir: {}
         cache:
-          repo: $(DOCKER_REGISTRY)/$(ORG)/cache
+          repo: ${DOCKER_REGISTRY}/${ORG}/cache
+    - image: builder-python36
+      context: builder-python36
+      kaniko:
+        dockerfile: Dockerfile
+        buildArgs:
+          BASE_IMAGE: ${DOCKER_REGISTRY}/${ORG}/builder-base:${VERSION}
+        buildContext:
+          localDir: {}
+        cache:
+          repo: ${DOCKER_REGISTRY}/${ORG}/cache
+    - image: builder-python37
+      context: builder-python37
+      kaniko:
+        dockerfile: Dockerfile
+        buildArgs:
+          BASE_IMAGE: ${DOCKER_REGISTRY}/${ORG}/builder-base:${VERSION}
+        buildContext:
+          localDir: {}
+        cache:
+          repo: ${DOCKER_REGISTRY}/${ORG}/cache
   cluster:
     namespace: ai
     pullSecretName: kaniko-secret
     dockerConfig:
       secretName: jenkins-docker-cfg
+test:
+# Requires Skaffold 1.9+
+#  - image: builder-python36
+#    structureTests:
+#      - './builder-python36/test/*'
+#  - image: builder-python37
+#    structureTests:
+#      - './builder-python37/test/*'

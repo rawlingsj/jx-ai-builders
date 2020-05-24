@@ -1,0 +1,7 @@
+schemaVersion: '2.0.0'
+commandTests:
+- name: 'python37'
+  command: 'python3'
+  args: ['--version']
+  excludedError: ['.*FAIL.*']
+  expectedOutput: ['.*Python 3.7.*']

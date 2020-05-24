@@ -12,10 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ARG JX_BUILDER_VERSION=2.0.1117-453
-FROM gcr.io/jenkinsxio/builder-jx:${JX_BUILDER_VERSION}
+#ARG JX_BUILDER_VERSION=2.0.1117-453
+#FROM gcr.io/jenkinsxio/builder-jx:${JX_BUILDER_VERSION}
+ARG BASE_BUILDER_VERSION=0.0.80
+FROM gcr.io/jenkinsxio/builder-base:${BASE_BUILDER_VERSION}
 
-ARG DESCRIPTION="Base image for the AI builds"
+ARG DESCRIPTION="Base builder image for the AI custom builders"
 ARG SCM_REPOSITORY=git@github.com:nuxeo/jx-ai-builders.git
 ARG VERSION=unknown
 ARG SCM_REF=unknown
@@ -26,6 +28,11 @@ LABEL version=${VERSION}
 LABEL scm-ref=${SCM_REF}
 
 USER root
+
+# jx
+ENV JX_VERSION 2.0.1240
+RUN curl -f -L https://github.com/jenkins-x/jx/releases/download/v${JX_VERSION}/jx-linux-amd64.tar.gz | tar xzv && \
+  mv jx /usr/bin/
 
 RUN yum -y update && \
     yum -y install epel-release deltarpm && \
@@ -60,7 +67,5 @@ RUN mkdir -p /opt/build/tools && \
 #    echo "jenkins  ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/jenkins
 
 #USER ${JENKINS_USER}
-
-RUN echo ${DESCRIPTION}:${SCM_URL}:${SCM_REF}:${VERSION} > /home/jenkins/.ai-builder-base
 
 CMD ["tail", "-f", "/dev/null"]

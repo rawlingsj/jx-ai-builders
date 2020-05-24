@@ -18,6 +18,9 @@
  */
 
 void setGitHubBuildStatus(String context, String message, String state) {
+    if (NAMESPACE == 'ai-staging') { // No GitHub status from ai-staging
+        return
+    }
     step([$class            : 'GitHubCommitStatusSetter',
           reposSource       : [$class: 'ManuallyEnteredRepositorySource', url: 'https://github.com/nuxeo/jx-ai-builders'],
           contextSource     : [$class: 'ManuallyEnteredCommitContextSource', context: context],
@@ -30,35 +33,46 @@ String getReleaseVersion() {
 }
 
 String getVersion() {
-    return BRANCH_NAME == 'master' ? 'latest' : getReleaseVersion() + BRANCH_NAME
+    return BRANCH_NAME == 'master' ? getReleaseVersion() : getReleaseVersion() + "-$BRANCH_NAME"
+}
+
+void skaffoldGen() {
+    withEnv(["VERSION=${getVersion()}"]) {
+        sh '''
+export SCM_REF=$(git show -s --pretty=format:'%h%d' 2>/dev/null ||echo unknown)
+envsubst < skaffold.yaml > skaffold.yaml~gen
+
+# dry-run requires skaffold 1.9+
+#skaffold build -f skaffold.yaml~gen -q --dry-run
+'''
+    }
 }
 
 void skaffoldBuild(String buildImage) {
     withEnv(["VERSION=${getVersion()}"]) {
-        echo "Build image ${buildImage} version ${VERSION}"
+        echo "Build ${DOCKER_REGISTRY}/${ORG}/${buildImage}:${VERSION}"
         sh """
-export SCM_REF=\$(git show -s --pretty=format:'%h%d' 2>/dev/null ||echo unknown)
-envsubst < skaffold.yaml > skaffold.yaml~gen
 skaffold build -f skaffold.yaml~gen -b $buildImage
 """
     }
 }
 
 def skaffoldBuildStage(String buildImage) {
-    stage("$buildImage") {
-        try {
-            setGitHubBuildStatus("build/$buildImage", "Build $buildImage image", 'PENDING')
-            container('jx-base') {
-                skaffoldBuild("$buildImage")
+    return {
+        stage("$buildImage") {
+            try {
+                setGitHubBuildStatus("build/$buildImage", "Build $buildImage image", 'PENDING')
+                container('jx-base') {
+                    skaffoldBuild("$buildImage")
+                }
+                setGitHubBuildStatus("build/$buildImage", "Build $buildImage image", 'SUCCESS')
+            } catch (Throwable cause) {
+                setGitHubBuildStatus("build/$buildImage", "Build $buildImage image", 'FAILURE')
+                throw cause
             }
-            setGitHubBuildStatus("build/$buildImage", "Build $buildImage image", 'SUCCESS')
-        } catch (Throwable cause) {
-            setGitHubBuildStatus("build/$buildImage", "Build $buildImage image", 'FAILURE')
-            throw cause
         }
     }
 }
-
 
 pipeline {
     agent {
@@ -71,6 +85,8 @@ pipeline {
     }
     environment {
         ORG = 'nuxeo'
+        INTERNAL_DOCKER_REGISTRY = 'docker-registry.ai.dev.nuxeo.com'
+        NAMESPACE = ''
     }
     stages {
         stage('Init') {
@@ -81,37 +97,37 @@ jx step git credentials
 git config credential.helper store
 git fetch --tags --quiet
 '''
+                    script {
+                        NAMESPACE = sh(script: "jx -b ns | cut -d\\' -f2", returnStdout: true).trim()
+                    }
+                    skaffoldGen()
                 }
             }
         }
-        stage('Build all builders') {
+        stage('Build') {
             steps {
                 script {
-                    skaffoldBuildStage("builder-base")
+                    skaffoldBuildStage("builder-base").call()
                     stage('Custom Builders') {
-                        parallel {
-                            skaffoldBuildStage('builder-base')
-                            skaffoldBuildStage('builder-java8')
-                            skaffoldBuildStage('builder-java11')
-                            skaffoldBuildStage('builder-nodejs')
-                            skaffoldBuildStage('builder-nuxeo1010')
-                        }
+                        def builders = ['builder-java8', 'builder-java11',
+                                        'builder-nodejs',
+                                        'builder-nuxeo1010',
+                                        'builder-python36', 'builder-python37']
+                        parallel(builders.collectEntries {
+                            [("${it}".toString()): skaffoldBuildStage(it)]
+                        })
                     }
                 }
             }
         }
         stage('Release') {
             when {
-                branch 'NOmaster'
+                branch 'master'
+                expression { NAMESPACE == 'ai' }
             }
             steps {
                 container('jx-base') {
                     script {
-                        def currentNamespace = sh(returnStdout: true, script: "jx --batch-mode ns | cut -d\\' -f2").trim()
-                        if (currentNamespace == 'ai-staging') {
-                            echo "Running in namespace ${currentNamespace}, skip GitHub release stage."
-                            return
-                        }
                         setGitHubBuildStatus('release', 'Release', 'PENDING')
                         withEnv(["VERSION=${getReleaseVersion()}"]) {
                             echo "Releasing version ${VERSION}"

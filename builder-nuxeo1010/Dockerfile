@@ -15,7 +15,7 @@
 ARG BASE_IMAGE
 FROM ${BASE_IMAGE}
 
-ARG DESCRIPTION="Nuxeo 10.10 environment builder image for AI team"
+ARG DESCRIPTION="Nuxeo 10.10 environment builder for AI team"
 LABEL description=${DESCRIPTION}
 
 #USER root
@@ -51,13 +51,9 @@ RUN curl -f -L -o /tmp/yarn.tgz https://github.com/yarnpkg/yarn/releases/downloa
 	mv yarn-v${YARN_VERSION} /opt/yarn && \
 	ln -s /opt/yarn/bin/yarn /usr/local/bin/yarn
 
-# Chromium, chromedriver, Xvfb
-RUN yum install -y bzip2 GConf2 gtk2 chromedriver chromium xorg-x11-server-Xvfb
-RUN npm i -g watch-cli vsce typescript aws-cdk
-
-# Google Chrome
-RUN yum install -y google-chrome-stable \
-  && yum clean all
+# Chromium, chromedriver, Xvfb
+RUN yum install -y GConf2 gtk2 chromedriver chromium xorg-x11-server-Xvfb
+RUN npm i -g vsce typescript aws-cdk
 
 # geckodriver
 ARG GECKODRIVER_VERSION=0.26.0
@@ -70,7 +66,5 @@ ENV M2_HOME /opt/apache-maven-${MAVEN_VERSION}
 ENV maven.home ${M2_HOME}
 ENV M2 ${M2_HOME}/bin
 ENV PATH ${M2}:${PATH}
-
-RUN echo ${DESCRIPTION}:${SCM_URL}:${SCM_REF}:${VERSION} > /home/jenkins/.ai-builder-nuxeo1010
 
 CMD ["tail", "-f", "/dev/null"]
