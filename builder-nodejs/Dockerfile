@@ -15,8 +15,7 @@
 ARG BASE_IMAGE
 FROM ${BASE_IMAGE}
 
-ARG DESCRIPTION="NodeJS builder for AI team"
-LABEL description=${DESCRIPTION}
+LABEL description="NodeJS builder for AI team"
 
 #USER root
 

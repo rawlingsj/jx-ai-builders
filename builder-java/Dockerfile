@@ -15,9 +15,6 @@
 ARG BASE_IMAGE
 FROM ${BASE_IMAGE}
 
-ARG DESCRIPTION="Java builder for AI team"
-LABEL description=${DESCRIPTION}
-
 #USER root
 
 # Maven
@@ -26,6 +23,7 @@ RUN curl -f -L https://repo1.maven.org/maven2/org/apache/maven/apache-maven/${MA
 
 # Java and conversion tools
 ARG JDK_VERSION=1.8.0
+LABEL description="Java ${JDK_VERSION} builder for AI team"
 RUN yum -y --setopt=skip_missing_names_on_install=False install \
   java-${JDK_VERSION}-openjdk java-${JDK_VERSION}-openjdk-devel \
   # tzdata-java-2020a doesn't work with java (NXBT-3325)

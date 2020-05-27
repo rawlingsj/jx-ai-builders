@@ -15,8 +15,7 @@
 ARG BASE_IMAGE
 FROM ${BASE_IMAGE}
 
-ARG DESCRIPTION="Nuxeo 10.10 environment builder for AI team"
-LABEL description=${DESCRIPTION}
+LABEL description="Nuxeo 10.10 environment builder for AI team"
 
 #USER root
 

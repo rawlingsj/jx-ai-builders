@@ -1,4 +1,4 @@
-# (C) Copyright 2019 Nuxeo (http://nuxeo.com/) and others.
+# (C) Copyright 2019-2020 Nuxeo (http://nuxeo.com/) and others.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -21,10 +21,10 @@ build:
     - image: builder-base
       context: builder-base
       kaniko:
-        dockerfile: Dockerfile
         buildArgs:
-          VERSION: ${VERSION}
-          SCM_REF: ${SCM_REF}
+          VERSION: "${VERSION}"
+          SCM_REF: "${SCM_REF}"
+          BUILD_TAG: "${BUILD_TAG}"
         buildContext:
           localDir: {}
         cache:
@@ -32,7 +32,6 @@ build:
     - image: builder-java8
       context: builder-java
       kaniko:
-        dockerfile: Dockerfile
         buildArgs:
           BASE_IMAGE: ${DOCKER_REGISTRY}/${ORG}/builder-base:${VERSION}
           JDK_VERSION: "1.8.0"
@@ -43,7 +42,6 @@ build:
     - image: builder-java11
       context: builder-java
       kaniko:
-        dockerfile: Dockerfile
         buildArgs:
           BASE_IMAGE: ${DOCKER_REGISTRY}/${ORG}/builder-base:${VERSION}
           JDK_VERSION: "11"
@@ -54,7 +52,6 @@ build:
     - image: builder-nodejs
       context: builder-nodejs
       kaniko:
-        dockerfile: Dockerfile
         buildArgs:
           BASE_IMAGE: ${DOCKER_REGISTRY}/${ORG}/builder-base:${VERSION}
         buildContext:
@@ -64,7 +61,6 @@ build:
     - image: builder-nuxeo1010
       context: builder-nuxeo1010
       kaniko:
-        dockerfile: Dockerfile
         buildArgs:
           BASE_IMAGE: ${DOCKER_REGISTRY}/${ORG}/builder-base:${VERSION}
         buildContext:
@@ -74,7 +70,6 @@ build:
     - image: builder-python36
       context: builder-python36
       kaniko:
-        dockerfile: Dockerfile
         buildArgs:
           BASE_IMAGE: ${DOCKER_REGISTRY}/${ORG}/builder-base:${VERSION}
         buildContext:
@@ -84,7 +79,6 @@ build:
     - image: builder-python37
       context: builder-python37
       kaniko:
-        dockerfile: Dockerfile
         buildArgs:
           BASE_IMAGE: ${DOCKER_REGISTRY}/${ORG}/builder-base:${VERSION}
         buildContext:

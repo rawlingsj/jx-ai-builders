@@ -28,18 +28,9 @@ void setGitHubBuildStatus(String context, String message, String state) {
     ])
 }
 
-String getReleaseVersion() {
-    return sh(returnStdout: true, script: 'jx-release-version')
-}
-
-String getVersion() {
-    return BRANCH_NAME == 'master' ? getReleaseVersion() : getReleaseVersion() + "-$BRANCH_NAME"
-}
-
 void skaffoldGen() {
-    withEnv(["VERSION=${getVersion()}"]) {
+    withEnv(["VERSION=${VERSION}"]) {
         sh '''
-export SCM_REF=$(git show -s --pretty=format:'%h%d' 2>/dev/null ||echo unknown)
 envsubst < skaffold.yaml > skaffold.yaml~gen
 
 # dry-run requires skaffold 1.9+
@@ -49,7 +40,7 @@ envsubst < skaffold.yaml > skaffold.yaml~gen
 }
 
 void skaffoldBuild(String buildImage) {
-    withEnv(["VERSION=${getVersion()}"]) {
+    withEnv(["VERSION=${VERSION}"]) {
         echo "Build ${DOCKER_REGISTRY}/${ORG}/${buildImage}:${VERSION}"
         sh """
 skaffold build -f skaffold.yaml~gen -b $buildImage
@@ -87,6 +78,8 @@ pipeline {
         ORG = 'nuxeo'
         INTERNAL_DOCKER_REGISTRY = 'docker-registry.ai.dev.nuxeo.com'
         NAMESPACE = ''
+        VERSION = ''
+        SCM_REF = "${sh(script: 'git show -s --pretty=format:\'%h%d\'', returnStdout: true).trim();}"
     }
     stages {
         stage('Init') {
@@ -95,10 +88,11 @@ pipeline {
                     sh '''#!/bin/bash -xe
 jx step git credentials
 git config credential.helper store
-git fetch --tags --quiet
 '''
                     script {
                         NAMESPACE = sh(script: "jx -b ns | cut -d\\' -f2", returnStdout: true).trim()
+                        String releaseVersion = sh(returnStdout: true, script: 'jx-release-version')
+                        VERSION = BRANCH_NAME == 'master' ? releaseVersion : releaseVersion + "-${BRANCH_NAME}"
                     }
                     skaffoldGen()
                 }
@@ -127,19 +121,15 @@ git fetch --tags --quiet
             }
             steps {
                 container('jx-base') {
-                    script {
-                        setGitHubBuildStatus('release', 'Release', 'PENDING')
-                        withEnv(["VERSION=${getReleaseVersion()}"]) {
-                            echo "Releasing version ${VERSION}"
-                            sh '''#!/bin/bash -xe
+                    setGitHubBuildStatus('release', 'Release', 'PENDING')
+                    echo "Releasing version ${VERSION}"
+                    sh '''#!/bin/bash -xe
 jx step tag -v ${VERSION}
 jx step changelog -v v${VERSION}
 
 # update builders version in the other repositories
 ./updatebot.sh ${VERSION}
 '''
-                        }
-                    }
                 }
             }
             post {

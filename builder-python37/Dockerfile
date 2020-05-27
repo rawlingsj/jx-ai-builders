@@ -15,8 +15,7 @@
 ARG BASE_IMAGE
 FROM ${BASE_IMAGE}
 
-ARG DESCRIPTION="Python 3.7 builder for AI team"
-LABEL description=${DESCRIPTION}
+LABEL description="Python 3.7 builder for AI team"
 
 #USER root
 

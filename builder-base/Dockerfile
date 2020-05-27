@@ -17,15 +17,16 @@
 ARG BASE_BUILDER_VERSION=0.0.80
 FROM gcr.io/jenkinsxio/builder-base:${BASE_BUILDER_VERSION}
 
-ARG DESCRIPTION="Base builder image for the AI custom builders"
-ARG SCM_REPOSITORY=git@github.com:nuxeo/jx-ai-builders.git
-ARG VERSION=unknown
-ARG SCM_REF=unknown
+ARG VERSION
+ARG SCM_REF
+ARG BUILD_TAG
 
-LABEL description=${DESCRIPTION}
-LABEL scm-url=${SCM_REPOSITORY}
 LABEL version=${VERSION}
 LABEL scm-ref=${SCM_REF}
+LABEL description="Base builder image for the AI custom builders"
+LABEL scm-url=git@github.com:nuxeo/jx-ai-builders.git
+LABEL build-tag=${BUILD_TAG}
+LABEL maintainer="Nuxeo AI <ai-team@nuxeo.com>"
 
 USER root
 
