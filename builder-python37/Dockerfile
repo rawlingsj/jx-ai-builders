@@ -40,7 +40,10 @@ RUN cd /usr/src && \
     pip install --upgrade awscli && \
     pip install --upgrade awscli-local && \
     pip install --upgrade tox && \
-    pip install --upgrade pipdeptree
+    # dependency tree of packages
+    pip install --upgrade pipdeptree && \
+    # publishing packages
+    pip install --upgrade twine
 
 #ARG JENKINS_USER=jenkins
 #USER ${JENKINS_USER}

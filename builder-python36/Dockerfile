@@ -40,7 +40,10 @@ RUN cd /usr/src && \
     pip install --upgrade awscli && \
     pip install --upgrade awscli-local && \
     pip install --upgrade tox && \
-    pip install --upgrade pipdeptree
+    # dependency tree of packages
+    pip install --upgrade pipdeptree && \
+    # publishing packages
+    pip install --upgrade twine
 
 # https://github.com/jenkins-x/jenkins-x-builders/blob/master/builder-python/Dockerfile
 #RUN yum install -y https://centos7.iuscommunity.org/ius-release.rpm && \
