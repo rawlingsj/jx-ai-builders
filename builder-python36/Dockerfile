@@ -20,7 +20,7 @@ LABEL description="Python 3.6 builder for AI team"
 #USER root
 
 # https://github.com/jenkins-x/jenkins-x-builders/blob/master/builder-python37/Dockerfile
-RUN yum -y install gcc openssl-devel bzip2-devel libffi-devel libsqlite3x-devel && \
+RUN yum -y install gcc openssl-devel bzip2-devel libffi-devel libsqlite3x-devel xz-devel && \
     yum clean all
 ENV PYTHONVERSION 3.6.10
 RUN cd /usr/src && \
