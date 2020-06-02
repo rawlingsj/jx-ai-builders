@@ -123,13 +123,13 @@ git config credential.helper store
                 container('jx-base') {
                     setGitHubBuildStatus('release', 'Release', 'PENDING')
                     echo "Releasing version ${VERSION}"
-                    sh '''#!/bin/bash -xe
+                    sh """#!/bin/bash -xe
 jx step tag -v ${VERSION}
 jx step changelog -v v${VERSION}
 
 # update builders version in the other repositories
 ./updatebot.sh ${VERSION}
-'''
+"""
                 }
             }
             post {
