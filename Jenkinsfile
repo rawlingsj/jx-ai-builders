@@ -67,12 +67,26 @@ def skaffoldBuildStage(String buildImage) {
 
 pipeline {
     agent {
-        label 'jenkins-jx-base'
+        kubernetes {
+            label 'jenkins-jx-base'
+            yaml """
+spec:
+  containers:
+  - name: "jx-base"
+    resources:
+      limits:
+        memory: "16Gi"
+        cpu: "8"
+      requests:
+        memory: "4Gi"
+        cpu: "2"
+"""
+        }
     }
     options {
         disableConcurrentBuilds()
         buildDiscarder(logRotator(daysToKeepStr: '60', numToKeepStr: '20', artifactNumToKeepStr: '1'))
-        timeout(time: 1, unit: 'HOURS')
+        timeout(time: 2, unit: 'HOURS')
     }
     environment {
         ORG = 'nuxeo'
