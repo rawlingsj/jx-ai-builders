@@ -43,7 +43,9 @@ RUN cd /usr/src && \
     # dependency tree of packages
     pip install --upgrade pipdeptree && \
     # publishing packages
-    pip install --upgrade twine
+    pip install --upgrade twine && \
+    pip install --upgrade attrs && \
+    pip install --upgrade iniconfig
 
 # https://github.com/jenkins-x/jenkins-x-builders/blob/master/builder-python/Dockerfile
 #RUN yum install -y https://centos7.iuscommunity.org/ius-release.rpm && \

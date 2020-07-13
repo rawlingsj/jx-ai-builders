@@ -43,7 +43,9 @@ RUN cd /usr/src && \
     # dependency tree of packages
     pip install --upgrade pipdeptree && \
     # publishing packages
-    pip install --upgrade twine
+    pip install --upgrade twine && \
+    pip install --upgrade attrs && \
+    pip install --upgrade iniconfig
 
 #ARG JENKINS_USER=jenkins
 #USER ${JENKINS_USER}
