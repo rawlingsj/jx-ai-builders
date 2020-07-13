@@ -19,7 +19,7 @@ FROM ${BASE_IMAGE}
 
 # Maven
 ARG MAVEN_VERSION=3.6.3
-RUN curl -f -L https://repo1.maven.org/maven2/org/apache/maven/apache-maven/${MAVEN_VERSION}/apache-maven-${MAVEN_VERSION}-bin.tar.gz | tar -C /opt -xzv
+RUN curl --retry 5 -fsSL https://repo1.maven.org/maven2/org/apache/maven/apache-maven/${MAVEN_VERSION}/apache-maven-${MAVEN_VERSION}-bin.tar.gz | tar -C /opt -xzv
 
 # Java and conversion tools
 ARG JDK_VERSION=1.8.0

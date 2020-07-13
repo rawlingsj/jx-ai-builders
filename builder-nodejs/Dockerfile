@@ -21,7 +21,7 @@ LABEL description="NodeJS builder for AI team"
 
 # NodeJS
 ARG NODEJS_VERSION=10
-RUN curl -f --silent --location https://rpm.nodesource.com/setup_${NODEJS_VERSION}.x | bash - && \
+RUN curl --retry 5 -fsSL https://rpm.nodesource.com/setup_${NODEJS_VERSION}.x | bash - && \
   yum install -y nodejs gcc-c++ \
   && yum clean all
 

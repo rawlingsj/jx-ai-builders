@@ -21,7 +21,7 @@ LABEL description="Nuxeo 10.10 environment builder for AI team"
 
 # Maven
 ARG MAVEN_VERSION=3.6.3
-RUN curl -f -L https://repo1.maven.org/maven2/org/apache/maven/apache-maven/${MAVEN_VERSION}/apache-maven-${MAVEN_VERSION}-bin.tar.gz | tar -C /opt -xzv
+RUN curl --retry 5 -fsSL https://repo1.maven.org/maven2/org/apache/maven/apache-maven/${MAVEN_VERSION}/apache-maven-${MAVEN_VERSION}-bin.tar.gz | tar -C /opt -xzv
 
 # Java and conversion tools
 ARG JDK_VERSION=1.8.0
@@ -34,7 +34,7 @@ RUN alternatives --set java java-${JDK_VERSION}-openjdk.x86_64
 
 # NodeJS
 ARG NODEJS_VERSION=10
-RUN curl -f --silent --location https://rpm.nodesource.com/setup_${NODEJS_VERSION}.x | bash - && \
+RUN curl --retry 5 -fsSL https://rpm.nodesource.com/setup_${NODEJS_VERSION}.x | bash - && \
   yum install -y nodejs gcc-c++ make \
   && yum clean all
 
@@ -45,7 +45,7 @@ RUN npm i -g bower@${BOWER_VERSION} gulp-cli@${GULP_VERSION} grunt-cli@${GRUNT_V
 
 # Yarn
 ARG YARN_VERSION=1.19.2
-RUN curl -f -L -o /tmp/yarn.tgz https://github.com/yarnpkg/yarn/releases/download/v${YARN_VERSION}/yarn-v${YARN_VERSION}.tar.gz && \
+RUN curl --retry 5 -fsSL -o /tmp/yarn.tgz https://github.com/yarnpkg/yarn/releases/download/v${YARN_VERSION}/yarn-v${YARN_VERSION}.tar.gz && \
 	tar xf /tmp/yarn.tgz && \
 	mv yarn-v${YARN_VERSION} /opt/yarn && \
 	ln -s /opt/yarn/bin/yarn /usr/local/bin/yarn
@@ -56,7 +56,7 @@ RUN npm i -g vsce typescript aws-cdk
 
 # geckodriver
 ARG GECKODRIVER_VERSION=0.26.0
-RUN curl -f -L https://github.com/mozilla/geckodriver/releases/download/v${GECKODRIVER_VERSION}/geckodriver-v${GECKODRIVER_VERSION}-linux64.tar.gz | tar -C /usr/local/bin -xzv
+RUN curl --retry 5 -fsSL https://github.com/mozilla/geckodriver/releases/download/v${GECKODRIVER_VERSION}/geckodriver-v${GECKODRIVER_VERSION}-linux64.tar.gz | tar -C /usr/local/bin -xzv
 
 #ARG JENKINS_USER=jenkins
 #USER ${JENKINS_USER}

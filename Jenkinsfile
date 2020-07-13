@@ -17,12 +17,21 @@
  *     Julien Carsique <jcarsique@nuxeo.com>
  */
 
-void setGitHubBuildStatus(String context, String message, String state) {
+void setGitHubBuildStatus(String context) {
     if (NAMESPACE == 'ai-staging') { // No GitHub status from ai-staging
         return
     }
+    step([
+            $class       : 'GitHubCommitStatusSetter',
+            reposSource  : [$class: 'ManuallyEnteredRepositorySource', url: 'https://github.com/nuxeo/jx-ai-builders'],
+            contextSource: [$class: 'ManuallyEnteredCommitContextSource', context: context],
+            errorHandlers: [[$class: 'ShallowAnyErrorHandler']]
+    ])
+}
+
+void setGitHubBuildStatus(String context, String message, String state) {
     step([$class            : 'GitHubCommitStatusSetter',
-          reposSource       : [$class: 'ManuallyEnteredRepositorySource', url: 'https://github.com/nuxeo/jx-ai-builders'],
+          reposSource       : [$class: 'ManuallyEnteredRepositorySource', url: "https://github.com/nuxeo/jx-ai-builders"],
           contextSource     : [$class: 'ManuallyEnteredCommitContextSource', context: context],
           statusResultSource: [$class: 'ConditionalStatusResultSource', results: [[$class: 'AnyBuildResult', message: message, state: state]]],
     ])
@@ -52,14 +61,18 @@ def skaffoldBuildStage(String buildImage) {
     return {
         stage("$buildImage") {
             try {
-                setGitHubBuildStatus("build/$buildImage", "Build $buildImage image", 'PENDING')
+                setGitHubBuildStatus("build/$buildImage")
                 container('jx-base') {
-                    skaffoldBuild("$buildImage")
+                    timeout(activity: true, time: 120) {
+                        skaffoldBuild("$buildImage")
+                    }
                 }
-                setGitHubBuildStatus("build/$buildImage", "Build $buildImage image", 'SUCCESS')
-            } catch (Throwable cause) {
-                setGitHubBuildStatus("build/$buildImage", "Build $buildImage image", 'FAILURE')
-                throw cause
+                currentBuild.setResult('SUCCESS')
+            } catch(Throwable t) {
+                currentBuild.setResult('FAILURE')
+                throw t
+            } finally {
+                setGitHubBuildStatus("build/$buildImage")
             }
         }
     }
@@ -86,7 +99,7 @@ spec:
     options {
         disableConcurrentBuilds()
         buildDiscarder(logRotator(daysToKeepStr: '60', numToKeepStr: '20', artifactNumToKeepStr: '1'))
-        timeout(time: 2, unit: 'HOURS')
+        timeout(time: 5, unit: 'HOURS')
     }
     environment {
         ORG = 'nuxeo'
@@ -134,8 +147,8 @@ git config credential.helper store
                 expression { NAMESPACE == 'ai' }
             }
             steps {
+                setGitHubBuildStatus('release')
                 container('jx-base') {
-                    setGitHubBuildStatus('release', 'Release', 'PENDING')
                     echo "Releasing version ${VERSION}"
                     sh """#!/bin/bash -xe
 jx step tag -v ${VERSION}
@@ -148,13 +161,8 @@ jx step changelog -v v${VERSION}
             }
             post {
                 always {
+                    setGitHubBuildStatus('release')
                     step([$class: 'JiraIssueUpdater', issueSelector: [$class: 'DefaultIssueSelector'], scm: scm])
-                }
-                success {
-                    setGitHubBuildStatus('release', 'Release', 'SUCCESS')
-                }
-                failure {
-                    setGitHubBuildStatus('release', 'Release', 'FAILURE')
                 }
             }
         }

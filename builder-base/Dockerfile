@@ -32,7 +32,7 @@ USER root
 
 # jx
 ENV JX_VERSION 2.0.1240
-RUN curl -f -L https://github.com/jenkins-x/jx/releases/download/v${JX_VERSION}/jx-linux-amd64.tar.gz | tar xzv && \
+RUN curl --retry 5 -fsSL https://github.com/jenkins-x/jx/releases/download/v${JX_VERSION}/jx-linux-amd64.tar.gz | tar xzv && \
   mv jx /usr/bin/
 
 RUN yum -y update && \
@@ -59,7 +59,7 @@ RUN mkdir -p /opt/build/tools && \
 
 # reg: Docker registry v2 command line client
 RUN export REG_SHA256="ade837fc5224acd8c34732bf54a94f579b47851cc6a7fd5899a98386b782e228" && \
-    curl -fSL "https://github.com/genuinetools/reg/releases/download/v0.16.1/reg-linux-amd64" -o "/usr/bin/reg" && \
+    curl --retry 5 -fsSL "https://github.com/genuinetools/reg/releases/download/v0.16.1/reg-linux-amd64" -o "/usr/bin/reg" && \
 	echo "${REG_SHA256}  /usr/bin/reg" | sha256sum -c - && \
 	chmod +x "/usr/bin/reg"
 
